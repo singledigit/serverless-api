@@ -17,9 +17,6 @@
     "url": "https://github.com/davehimself/serverless-api/issues"
   },
   "homepage": "https://github.com/davehimself/serverless-api#readme",
-  "dependencies": {
-    "aws-sdk": "^2.6.11"
-  },
   "devDependencies": {
     "serverless": "^1.0.2"
   }
