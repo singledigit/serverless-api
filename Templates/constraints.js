@@ -5,6 +5,8 @@ var client = require('./client');
 
 module.exports.handler = (event, context, callback) => {
 
+    console.log("event", event);
+
     if (!event.data || !event.data.docType) client.error(callback, "Document Type Required", "NotNull");
 
     else {

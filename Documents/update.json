@@ -4,6 +4,7 @@
     "docType":"times",
     "docStatus":"complete",
     "pipeline":"solutions",
-    "meetingOptionOne": "tester"
+    "meetingOptionOne": "tester",
+    "meetingOptionTwo": "tester2"
   }
 }

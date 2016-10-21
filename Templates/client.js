@@ -1,9 +1,11 @@
 "use strict";
 
+require('dotenv').config();
 var AWS = require('aws-sdk');
 var db = new AWS.DynamoDB();
 var dc = new AWS.DynamoDB.DocumentClient({service: db});
 var attr = require('dynamodb-data-types').AttributeValue;
+var lambda = new AWS.Lambda({region: process.env.REGION});
 
 function error(callback, data, type) {
     if (!type) type = null;
@@ -72,6 +74,15 @@ function deleteItem(params) {
     });
 }
 
+function invoke(func, data) {
+    return new Promise((resolve, reject) => {
+        lambda.invoke({FunctionName: func, Payload: JSON.stringify(data)}, (error, data) => {
+            if (error) reject(error);
+            else resolve(data);
+        });
+    })
+}
+
 exports.error = error;
 exports.success = success;
 exports.query = query;
@@ -80,3 +91,4 @@ exports.get = get;
 exports.put = put;
 exports.update = update;
 exports.delete = deleteItem;
+exports.invoke = invoke;

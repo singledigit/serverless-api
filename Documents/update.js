@@ -8,66 +8,70 @@ var attr = require('dynamodb-data-types').AttributeValue;
 
 module.exports.handler = (event, context, callback) => {
 
-    var generalConstraints = model.constraints;
+    var errors;
+    var document;
 
-    // need to build a validation from the dynamic form if status is complete
-    if (event.data && event.data.docStatus && event.data.docStatus === 'complete') {
-        var docs = require('./forms');
+    // check for dynamic constraints
+    checkForDynamicConstraints(event)
+        .then(response => {
 
-        var customConstraints = {};
-
-        var doc = docs[event.data.docType];
-
-        console.log("doc", doc);
-
-        doc.map(field => {
-            if (field.required) customConstraints[field.propName] = {presence: true}
-        });
-
-        console.log("general constraints", generalConstraints);
-
-        generalConstraints = Object.assign(generalConstraints, customConstraints)
-    }
-
-
-    // build model
-    var document = Object.assign(model.schema, event.data);
-    var wrappedDocument = attr.wrap(document);
-
-    // validate model
-    var invalid = validate(document, model.constraints, {format: 'flat'});
-    if (invalid) client.error(callback, invalid, "Validation");
-
-    else {
-
-        // build update
-        var updates = [];
-        var values = {};
-        var count = 0;
-
-        for (var key in document) {
-            if (document.hasOwnProperty(key)) {
-                if (model.keys.indexOf(key) < 0) {
-                    updates.push(`${key}=:value${count}`);
-                    values[`:value${count}`] = wrappedDocument[key];
-                }
-                count++;
+            var dynamicConstraints = {};
+            if (response) {
+                var data = JSON.parse(response.Payload);
+                dynamicConstraints = data.success ? data.results : {};
             }
-        }
 
-        var documentPayload = {
-            TableName: `Documents-${process.env.STAGE}`,
-            Key: {id: wrappedDocument.id, docType: wrappedDocument.docType},
-            UpdateExpression: `SET ${updates.toString()}`,
-            ExpressionAttributeValues: values
-        };
+            // build model
+            document = Object.assign(model.schema, event.data);
+            var wrappedDocument = attr.wrap(document);
 
-        client.update(documentPayload)
-            .then(() => {
-                return client.success(callback, document);
-            })
-            .catch(error => {
-                return callback(error);
-            })
-    }
+            // validate model
+            var invalid = validate(document, Object.assign(model.constraints, dynamicConstraints), {format: 'flat'});
+            if (invalid) {
+                errors = invalid;
+                throw new Error('Invalid');
+            }
+
+            // build update
+            var updates = [];
+            var values = {};
+            var count = 0;
+
+            for (var key in document) {
+                if (document.hasOwnProperty(key)) {
+                    if (model.keys.indexOf(key) < 0) {
+                        updates.push(`${key}=:value${count}`);
+                        values[`:value${count}`] = wrappedDocument[key];
+                    }
+                    count++;
+                }
+            }
+
+            var documentPayload = {
+                TableName: `Documents-${process.env.STAGE}`,
+                Key: {id: wrappedDocument.id, docType: wrappedDocument.docType},
+                UpdateExpression: `SET ${updates.toString()}`,
+                ExpressionAttributeValues: values
+            };
+
+            return client.update(documentPayload)
+        })
+        .then(() => {
+            return client.success(callback, document);
+        })
+        .catch(error => {
+            if (error.message === 'Invalid') return client.error(callback, errors, "Invalid");
+            return callback(error);
+        })
 };
+
+function checkForDynamicConstraints(event) {
+
+    if (event.data && event.data.docType && event.data.docStatus && event.data.docStatus === 'complete') {
+        return client.invoke(`templates-${process.env.STAGE}-constraints`, {data: {docType: event.data.docType}})
+    }
+
+    return new Promise((resolve) => {
+        return resolve(null)
+    })
+}

@@ -10,7 +10,7 @@ var lambda = new AWS.Lambda({region: process.env.REGION});
 
 // Primary handler
 module.exports.handler = (event, context, callback) => {
-    if (event.customerId) getOne(event, callback);
+    if (event.data && event.data.customerId) getOne(event, callback);
     else getAll(callback);
 };
 
@@ -96,23 +96,4 @@ function getOne(event, callback) {
         .catch(error => {
             callback(error);
         })
-}
-
-
-// Library
-function invoke(func, data) {
-    return new Promise((resolve, reject) => {
-        lambda.invoke({FunctionName: func, Payload: JSON.stringify(data)}, (error, data) => {
-            if (error) reject(error);
-            else resolve(data);
-        });
-    })
-}
-
-function combine(customer, people, statuses) {
-    statuses.sort(function (a, b) {
-        return new Date(a.date) - new Date(b.date);
-    });
-
-    return Object.assign(customer, {people: people}, {statusHistory: statuses}, {status: statuses[statuses.length - 1]})
 }
