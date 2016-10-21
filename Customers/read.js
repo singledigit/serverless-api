@@ -7,7 +7,7 @@ var client = require('./client');
 
 // Primary handler
 module.exports.handler = (event, context, callback) => {
-    if (event.customerId) readOne(event, callback);
+    if (event.data && event.data.customerId) readOne(event, callback);
     else readAll(callback);
 };
 
@@ -29,7 +29,7 @@ function readAll(callback) {
 function readOne(event, callback) {
     var customerParams = {
         TableName: `Customers-${process.env.STAGE}`,
-        Key: {"id": event.customerId}
+        Key: {"id": event.data.customerId}
     };
 
     client.get(customerParams)

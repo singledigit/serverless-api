@@ -5,16 +5,15 @@ var client = require('./client');
 
 module.exports.handler = (event, context, callback) => {
 
-    if (!event.docType) client.error(callback, "Document Type Required", "NotNull");
+    if (!event.data || !event.data.docType) client.error(callback, "Document Type Required", "NotNull");
 
     else {
-        return new Promise((resolve, reject) => {
-            try {
-                return resolve(docs[event.docType])
-            }
-            catch(error){
-                return reject(error)
-            }
-        })
+        try {
+            var doc = docs[event.data.docType];
+            client.success(callback, doc)
+        }
+        catch (error) {
+            callback(error);
+        }
     }
 };

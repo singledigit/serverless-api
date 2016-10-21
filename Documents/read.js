@@ -6,7 +6,7 @@ var client = require('./client');
 
 module.exports.handler = (event, context, callback) => {
 
-    if (!event.customerId) client.error(callback, "Customer ID is required", "NotNull");
+    if (!event.data || !event.data.customerId) client.error(callback, "Customer ID is required", "NotNull");
 
     let documentParams = {
         TableName: `Documents-${process.env.STAGE}`,
