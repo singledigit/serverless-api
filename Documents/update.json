@@ -1,8 +1,9 @@
 {
   "data":{
     "id":"00002",
-    "docType":"dqd",
-    "docStatus":"open",
-    "pipeline":"solutions"
+    "docType":"times",
+    "docStatus":"complete",
+    "pipeline":"solutions",
+    "meetingOptionOne": "tester"
   }
 }
