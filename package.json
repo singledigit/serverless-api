@@ -1,0 +1,26 @@
+{
+  "name": "serverless-api",
+  "version": "1.0.0",
+  "description": "API using Lambda and serverless",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/davehimself/serverless-api.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/davehimself/serverless-api/issues"
+  },
+  "homepage": "https://github.com/davehimself/serverless-api#readme",
+  "dependencies": {
+    "aws-sdk": "^2.6.11"
+  },
+  "devDependencies": {
+    "serverless": "^1.0.2"
+  }
+}
