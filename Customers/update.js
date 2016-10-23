@@ -36,7 +36,7 @@ module.exports.handler = (event, context, callback) => {
 
 
         var customerPayload = {
-            TableName: `Customers-${process.env.STAGE}`,
+            TableName: `${process.env.STAGE}-Customers`,
             Key: {id: wrappedCustomer.id},
             UpdateExpression: `SET ${updates.toString()}`,
             ExpressionAttributeValues: values

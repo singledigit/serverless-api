@@ -17,7 +17,7 @@ module.exports.handler = (event, context, callback) => {
 
     else {
         var customerPayload = {
-            TableName: `Customers-${process.env.STAGE}`,
+            TableName: `${process.env.STAGE}-Customers`,
             Item: customer,
             ConditionExpression: 'attribute_not_exists (id)'
         };

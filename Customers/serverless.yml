@@ -80,6 +80,24 @@ functions:
 #      - sns: greeter-topic
 #      - stream: arn:aws:dynamodb:region:XXXXXX:table/foo/stream/1970-01-01T00:00:00.000
 
+resources:
+  Resources:
+    StatusTable:
+      Type: "AWS::DynamoDB::Table"
+      Properties:
+        TableName: ${opt:stage, self:provider.stage}-Customers
+        ProvisionedThroughput:
+          ReadCapacityUnits: 5
+          WriteCapacityUnits: 3
+        AttributeDefinitions:
+          -
+            AttributeName: "id"
+            AttributeType: "S"
+        KeySchema:
+          -
+            AttributeName: "id"
+            KeyType: "HASH"
+
 # you can add CloudFormation resource templates here
 #resources:
 #  Resources:

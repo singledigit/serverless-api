@@ -15,7 +15,7 @@ module.exports.handler = (event, context, callback) => {
 // returns full list of customers when customerID not present
 function readAll(callback) {
 
-    client.scan({TableName: `Customers-${process.env.STAGE}`})
+    client.scan({TableName: `${process.env.STAGE}-Customers`})
         .then(response => {
             return client.success(callback, response)
         })
@@ -28,7 +28,7 @@ function readAll(callback) {
 // returns one customer for customerId
 function readOne(event, callback) {
     var customerParams = {
-        TableName: `Customers-${process.env.STAGE}`,
+        TableName: `${process.env.STAGE}-Customers`,
         Key: {"id": event.data.customerId}
     };
 
