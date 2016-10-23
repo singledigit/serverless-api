@@ -1,22 +1,20 @@
 'use strict';
 
-var docs = require('./forms');
+var docs = require('./templates');
 var client = require('./client');
 
 module.exports.handler = (event, context, callback) => {
-
-    console.log("event", event);
 
     if (!event.data || !event.data.docType) client.error(callback, "Document Type Required", "NotNull");
 
     else {
         try {
-            var docs = require('./forms');
+            var docs = require('./templates').docs;
             var doc = docs[event.data.docType];
 
             var customConstraints = {};
 
-            doc.map(field => {
+            doc.fields.map(field => {
                 if (field.required) customConstraints[field.propName] = {presence: true}
             });
 
