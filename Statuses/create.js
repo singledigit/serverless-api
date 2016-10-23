@@ -17,7 +17,7 @@ module.exports.handler = (event, context, callback) => {
 
     else {
         var statusPayload = {
-            TableName: `Status-${process.env.STAGE}`,
+            TableName: `${process.env.STAGE}-Statuses`,
             Item: status
         };
 

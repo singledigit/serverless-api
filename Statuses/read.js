@@ -10,10 +10,10 @@ module.exports.handler = (event, context, callback) => {
     else {
 
         let statusParams = {
-            TableName: `Status-${process.env.STAGE}`,
+            TableName: `${process.env.STAGE}-Statuses`,
             KeyConditionExpression: "id = :custId",
             ExpressionAttributeValues: {
-                ":custId": event.customerId
+                ":custId": event.data.customerId
             }
         };
 
