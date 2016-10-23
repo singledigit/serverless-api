@@ -9,10 +9,10 @@ module.exports.handler = (event, context, callback) => {
     if (!event.data || !event.data.customerId) client.error(callback, "Customer ID is required", "NotNull");
 
     let documentParams = {
-        TableName: `Documents-${process.env.STAGE}`,
+        TableName: `${process.env.STAGE}-Documents`,
         KeyConditionExpression: "id = :custId",
         ExpressionAttributeValues: {
-            ":custId": event.customerId
+            ":custId": event.data.customerId
         }
     };
 

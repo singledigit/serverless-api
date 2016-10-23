@@ -48,7 +48,7 @@ module.exports.handler = (event, context, callback) => {
             }
 
             var documentPayload = {
-                TableName: `Documents-${process.env.STAGE}`,
+                TableName: `${process.env.STAGE}-Documents`,
                 Key: {id: wrappedDocument.id, docType: wrappedDocument.docType},
                 UpdateExpression: `SET ${updates.toString()}`,
                 ExpressionAttributeValues: values
@@ -68,9 +68,11 @@ module.exports.handler = (event, context, callback) => {
 function checkForDynamicConstraints(event) {
 
     if (event.data && event.data.docType && event.data.docStatus && event.data.docStatus === 'complete') {
+        console.log('is complete');
         return client.invoke(`templates-${process.env.STAGE}-constraints`, {data: {docType: event.data.docType}})
     }
 
+    console.log('not complete');
     return new Promise((resolve) => {
         return resolve(null)
     })
