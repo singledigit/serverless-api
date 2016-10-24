@@ -68,11 +68,9 @@ module.exports.handler = (event, context, callback) => {
 function checkForDynamicConstraints(event) {
 
     if (event.data && event.data.docType && event.data.docStatus && event.data.docStatus === 'complete') {
-        console.log('is complete');
         return client.invoke(`templates-${process.env.STAGE}-constraints`, {data: {docType: event.data.docType}})
     }
 
-    console.log('not complete');
     return new Promise((resolve) => {
         return resolve(null)
     })
