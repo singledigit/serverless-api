@@ -23,7 +23,7 @@ module.exports.handler = (event, context, callback) => {
 
         client.put(statusPayload)
             .then(() => {
-                return client.success(callback, status);
+                return client.success(callback, {Item: status});
             })
             .catch(error => {
                 return callback(error);

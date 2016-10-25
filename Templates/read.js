@@ -10,7 +10,7 @@ module.exports.handler = (event, context, callback) => {
     else {
         try {
             var template = templates[event.data.template];
-            client.success(callback, template)
+            client.success(callback, {Item: template})
         }
         catch (error) {
             callback(error);

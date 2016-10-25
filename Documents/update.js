@@ -57,7 +57,19 @@ module.exports.handler = (event, context, callback) => {
             return client.update(documentPayload)
         })
         .then(() => {
-            return client.success(callback, document);
+            return determineNewStatus(event, callback);
+        })
+        .then(response => {
+            return client.invoke(`statuses-${process.env.STAGE}-create`, {data: response});
+        })
+        .then(response => {
+            console.log("Status response", response);
+            var status = {};
+            var res = JSON.parse(response.Payload);
+            if (res.success) {
+                status = res.results.Item;
+            }
+            return client.success(callback, {document: document, status: status});
         })
         .catch(error => {
             if (error.message === 'Invalid') return client.error(callback, errors, "Invalid");
@@ -74,4 +86,75 @@ function checkForDynamicConstraints(event) {
     return new Promise((resolve) => {
         return resolve(null)
     })
+}
+
+function determineNewStatus(event) {
+
+    var promises = [];
+    var docs;
+    var statuses;
+    var template;
+
+    // get all documents and statuses for this customer
+    promises.push(client.invoke(`documents-${process.env.STAGE}-read`, {data: {customerId: event.data.id}}));
+    promises.push(client.invoke(`statuses-${process.env.STAGE}-read`, {data: {customerId: event.data.id}}));
+
+    // get doc temps info
+    promises.push(client.invoke(`templates-${process.env.STAGE}-read`, {data: {template: "docs"}}));
+
+    return Promise.all(promises)
+        .then(responses => {
+
+            var newStatus = {
+                id: event.data.id,
+                repId: event.user.repId
+            };
+
+            var d = JSON.parse(responses[0].Payload);
+            var s = JSON.parse(responses[1].Payload);
+            var t = JSON.parse(responses[2].Payload);
+
+            if (d.success) docs = d.results.Items;
+            if (s.success) statuses = s.results.Items;
+            if (s.success) template = t.results.Item;
+
+            if (docs.length === 0) {
+                newStatus.document = 'pd';
+                newStatus.docPipeline = 'sales';
+            }
+
+            else {
+
+                var summary = [];
+
+                // check status of all docs
+                for (var key in template) {
+                    if (template.hasOwnProperty(key)) {
+                        var doc = docs.filter(item => {
+                            return item.docType === template[key].meta.keyName;
+                        });
+
+                        var r = {name: template[key].meta.keyName, value: true};
+
+                        if (doc.length === 0) summary.push(r);
+                        else if (doc[0].docStatus !== 'complete') summary.push(r);
+                    }
+                }
+
+                var next = summary.filter(item => {
+                    return item.value;
+                });
+
+                newStatus.document = next[0].name;
+                newStatus.pipeline = template[next[0].name].meta.pipeline;
+
+            }
+
+            return new Promise((resolve) => {
+                resolve(newStatus);
+            })
+        })
+        .catch(error => {
+            return error;
+        })
 }

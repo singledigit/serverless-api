@@ -21,6 +21,7 @@ var docs = {
         meta: {
             name: "Proposal Document",
             shortName: "pd",
+            keyName:"pd",
             pipeline: "sales"
         },
         fields: [
@@ -334,6 +335,7 @@ var docs = {
         meta: {
             name: "Available Times",
             shortName: "times",
+            keyName:"times",
             pipeline: "sales"
         },
         fields: [
@@ -372,6 +374,7 @@ var docs = {
         meta: {
             name: "Proposed Resources",
             shortName: "resources",
+            keyName: "resources",
             pipeline: "solutions"
         },
         fields: [
@@ -404,6 +407,7 @@ var docs = {
         meta: {
             name: "High Level Diagram",
             shortName: "hld",
+            keyName: "hld",
             pipeline: "solutions"
         },
         fields: [
@@ -457,6 +461,7 @@ var docs = {
         meta: {
             name: "Preliminary Pricing",
             shortName: "pricing1",
+            keyName: "pricing",
             pipeline: "solutions"
         },
         fields: [
@@ -519,7 +524,9 @@ var docs = {
     approval1: {
         meta: {
             name: "Initial Customer Approval",
-            shortName: "approval1"
+            shortName: "approval1",
+            keyName: "approval1",
+            pipeline:"solutions"
         },
         fields: [
             {
@@ -539,6 +546,7 @@ var docs = {
         meta: {
             name: "Design Document",
             shortName: "dd",
+            keyName: "dd",
             pipeline: "solutions"
         },
         fields: [
@@ -812,6 +820,7 @@ var docs = {
         meta: {
             name: "Final Pricing",
             shortName: "pricing2",
+            keyName: "pricing2",
             pipeline: "solutions"
         },
         fields: [
@@ -890,6 +899,7 @@ var docs = {
         meta: {
             name: "Implementation Documentation",
             shortName: "imp",
+            keyName: "imp",
             pipeline: "implementation"
         },
         fields: [

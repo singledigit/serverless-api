@@ -1,8 +1,14 @@
 {
-  "data":{
-    "id":"00001",
-    "docType":"pd",
-    "docStatus":"open",
-    "pipeline":"sales"
+  "data": {
+    "id": "00001",
+    "docType": "pd",
+    "docStatus": "complete",
+    "pipeline": "sales",
+    "currentBusinessModel": "bm",
+    "encoreLink": "encore link",
+    "suggestedServiceLevel": "fjhekdms,"
+  },
+  "user": {
+    "repId": "eric0089"
   }
 }
