@@ -2,7 +2,7 @@
   "data": {
     "id": "00001",
     "docType": "pd",
-    "docStatus": "complete",
+    "docStatus": "open",
     "pipeline": "sales",
     "currentBusinessModel": "bm",
     "encoreLink": "encore link",

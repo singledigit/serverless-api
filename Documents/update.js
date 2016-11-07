@@ -10,6 +10,7 @@ module.exports.handler = (event, context, callback) => {
 
     var errors;
     var document;
+    var status;
 
     // check for dynamic constraints
     checkForDynamicConstraints(event)
@@ -57,18 +58,40 @@ module.exports.handler = (event, context, callback) => {
             return client.update(documentPayload)
         })
         .then(() => {
+            // figures out next status
             return determineNewStatus(event, callback);
         })
         .then(response => {
+            // create new status record
             return client.invoke(`statuses-${process.env.STAGE}-create`, {data: response});
         })
         .then(response => {
-            console.log("Status response", response);
-            var status = {};
+            // set statuc value
             var res = JSON.parse(response.Payload);
             if (res.success) {
                 status = res.results.Item;
             }
+
+            // send status notification
+            var params = {
+                DelaySeconds: 10,
+                MessageAttributes: {
+                    "Status": {
+                        DataType: "String",
+                        StringValue: JSON.stringify(status)
+                    },
+                    "Document": {
+                        DataType: "String",
+                        StringValue: JSON.stringify(document)
+                    }
+                },
+                MessageBody: "Document Updated",
+                QueueUrl: `https://sqs.us-east-1.amazonaws.com/366574430586/${process.env.STAGE}-GeneralNotifications`
+            };
+
+            return client.sendQueueMessage(params)
+        })
+        .then(() => {
             return client.success(callback, {document: document, status: status});
         })
         .catch(error => {

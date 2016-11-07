@@ -4,8 +4,10 @@ require('dotenv').config();
 var AWS = require('aws-sdk');
 var db = new AWS.DynamoDB();
 var dc = new AWS.DynamoDB.DocumentClient({service: db});
+var sqs = new AWS.SQS();
 var attr = require('dynamodb-data-types').AttributeValue;
 var lambda = new AWS.Lambda({region: process.env.REGION});
+var sns = new AWS.SNS();
 
 function error(callback, data, type) {
     if (!type) type = null;
@@ -83,6 +85,42 @@ function invoke(func, data) {
     })
 }
 
+function sendQueueMessage(params) {
+    return new Promise((resolve, reject) => {
+        sqs.sendMessage(params, (err, data) => {
+            if (err) reject(err);
+            else resolve(data);
+        })
+    })
+}
+
+function receiveQueueMessage(params) {
+    return new Promise((resolve, reject) => {
+        sqs.receiveMessage(params, (err, data) => {
+            if (err) reject(err);
+            else resolve(data);
+        })
+    })
+}
+
+function deleteQueueMessage(params) {
+    return new Promise((resolve, reject) => {
+        sqs.deleteMessage(params, (err, data) => {
+            if (err) reject(err);
+            else resolve(data);
+        })
+    })
+}
+
+function publishNotification(params) {
+    return new Promise((resolve, reject) => {
+        sns.publish(params, (err, data) => {
+            if (err) reject(err);
+            else resolve(data);
+        })
+    })
+}
+
 exports.error = error;
 exports.success = success;
 exports.query = query;
@@ -92,3 +130,7 @@ exports.put = put;
 exports.update = update;
 exports.delete = deleteItem;
 exports.invoke = invoke;
+exports.sendQueueMessage = sendQueueMessage;
+exports.receiveQueueMessage = receiveQueueMessage;
+exports.deleteQueueMessage = deleteQueueMessage;
+exports.publishNotification = publishNotification;

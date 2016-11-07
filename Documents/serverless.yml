@@ -49,6 +49,10 @@ provider:
         - "dynamodb:PutItem"
         - "dynamodb:UpdateItem"
       Resource: "*"
+    - Effect: "Allow"
+      Action:
+        - "sqs:SendMessage"
+      Resource: "arn:aws:sqs:us-east-1:366574430586:dev-GeneralNotifications"
 
 
 # you can add packaging information here
