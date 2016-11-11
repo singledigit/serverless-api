@@ -1,7 +1,7 @@
 {
   "data":{
     "id":"00001",
-    "docType":"pd",
+    "docType":"times",
     "docStatus":"open",
     "pipeline":"sales"
   }

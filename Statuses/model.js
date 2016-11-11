@@ -1,4 +1,11 @@
-var schema = {
+
+function schema(){
+    var s = _schema;
+    s.date = new Date().toISOString();
+    return s;
+}
+
+var _schema = {
     id: null,
     date: new Date().toISOString(),
     document: null,

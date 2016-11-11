@@ -1,12 +1,11 @@
 {
   "data": {
     "id": "00001",
-    "docType": "pd",
+    "docType": "times",
     "docStatus": "open",
     "pipeline": "sales",
-    "currentBusinessModel": "bm",
-    "encoreLink": "encore link",
-    "suggestedServiceLevel": "fjhekdms,"
+    "meetingOptionOne": "bm",
+    "meetingOptionTwo": "encore link"
   },
   "user": {
     "repId": "eric0089"

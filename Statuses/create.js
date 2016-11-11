@@ -9,7 +9,7 @@ var client = require('./client');
 module.exports.handler = (event, context, callback) => {
 
     // build model
-    var status = Object.assign(model.schema, event.data);
+    var status = Object.assign(model.schema(), event.data);
 
     // validate model
     var invalid = validate(status, model.constraints, {format: 'flat'});

@@ -17,6 +17,7 @@ provider:
   name: aws
   runtime: nodejs4.3
   profile: solutioning
+  cfLogs: true
 
 # you can overwrite defaults here
 #  stage: dev

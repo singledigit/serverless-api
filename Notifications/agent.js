@@ -5,12 +5,8 @@ var client = require('./client');
 
 module.exports.handler = (event, context, callback) => {
 
-    var latestDocuments = [];
-    var latestStatuses = [];
-    var recentStatuses = [];
+    var documents = [];
     var receipts = [];
-    var people = [];
-    var customers = [];
 
     // grab message from queue
     var messageParams = {
@@ -33,99 +29,86 @@ module.exports.handler = (event, context, callback) => {
 
             response.Messages.map(message => {
 
-                // stores latest doc
+                // store receipt
                 receipts.push(message.ReceiptHandle);
-                latestDocuments.push(JSON.parse(message.MessageAttributes.Document.StringValue));
 
-                // stores latest status
-                var s = JSON.parse(message.MessageAttributes.Status.StringValue);
-                latestStatuses.push(s);
+                // store document
+                var doc = JSON.parse(message.MessageAttributes.Document.StringValue);
+                documents.push(doc);
 
-                // calls for previous status
-                promises.push(client.invoke(`statuses-${process.env.STAGE}-read`, {data: {customerId: s.id}}));
-
-                // calls for people
-                promises.push(client.invoke(`people-${process.env.STAGE}-read`, {data: {customerId: s.id}}));
-
-                // calls for customer
-                promises.push(client.invoke(`customers-${process.env.STAGE}-read`, {data: {customerId: s.id}}));
+                // get customers associated with documents
+                promises.push(client.invoke(`customers-${process.env.STAGE}-getComplete`, {data: {customerId: doc.id}}));
             });
 
             return Promise.all(promises);
         })
         .then(responses => {
             var notifications = [];
+            responses.map((response, ind) => {
+                var cust = JSON.parse(response.Payload).results[0];
 
-            // store prev Status
-            var recentStatus = JSON.parse(responses[0].Payload);
-            if (recentStatus.success) recentStatuses.push(recentStatus.results.Items[recentStatus.results.Items.length - 1]);
+                // sends message to each person associated
+                cust.people.map(person => {
+                    notifications.push(client.publishNotification(determineMessage(cust, documents[ind], cust.status, cust.statusHistory[cust.statusHistory.length - 2], person)))
+                })
+            });
+            return Promise.all(notifications);
+        })
+        .then(() => {
+            // delete messages from queue
+            var params = {
+                Entries: [],
+                QueueUrl: `https://sqs.us-east-1.amazonaws.com/366574430586/${process.env.STAGE}-GeneralNotifications`,
+            };
 
-            // store people
-            var p = JSON.parse(responses[1].Payload);
-            if (p.success) people.push(p.results.Items);
-
-            // store customer
-            var c = JSON.parse(responses[2].Payload);
-            if(c.success) customers.push(c.results.Item);
-
-            latestStatuses.map((stat, ind) => {
-                if (stat.document !== recentStatuses.document) {
-                    var docParams = createParams("ChangeToDocument", latestStatuses[ind], recentStatuses[ind], latestDocuments[ind], people[ind], customers[ind]);
-                    notifications.push(client.publishNotification(docParams));
-                }
-
-                if (stat.pipeline !== recentStatuses.pipeline) {
-                    var pipeParams = createParams("ChangeToPipeline", latestStatuses[ind], recentStatuses[ind], latestDocuments[ind], people[ind], customers[ind]);
-                    notifications.push(client.publishNotification(pipeParams));
-                }
-
-                if (latestDocuments.docStatus === 'rejected') {
-                    var rejectParams = createParams("RejectedDocument", latestStatuses[ind], recentStatuses[ind], latestDocuments[ind], people[ind], customers[ind]);
-                    notifications.push(client.publishNotification(rejectParams));
-                }
+            receipts.map((receipt, ind) => {
+                params.Entries.push({Id: `message${ind}`, ReceiptHandle: receipt})
             });
 
-            return Promise.all(notifications);
+            client.deleteQueueMessageBatch(params);
         })
         .then(response => {
             client.success(callback, response);
         })
         .catch(error => {
-            if (error.message === "Empty") client.success(callback, {});
+            if (error.message === "Empty") client.success(callback, {message: "no messages retrieved"});
             else callback(error);
         });
-
-    // delete message from queue
 };
 
-function createParams(topic, latestStatus, recentStatus, document, people, customer) {
 
-    console.log("Previous Status", recentStatus);
-
-    return {
-        TopicArn: `arn:aws:sns:us-east-1:366574430586:${process.env.STAGE}-${topic}`,
-        Message: "Status update",
+function determineMessage(customer, document, status, recentStatus, person) {
+    var params = {
+        TopicArn: `arn:aws:sns:us-east-1:366574430586:${process.env.STAGE}-notifier`,
+        Message: '',
+        Subject: '',
         MessageAttributes: {
-            "Status": {
+            "Type": {
                 DataType: "String",
-                StringValue: JSON.stringify(latestStatus)
+                StringValue: 'information'
             },
-            "PreviousStatus": {
+            "Person": {
                 DataType: "String",
-                StringValue: JSON.stringify(recentStatus)
-            },
-            "Document": {
-                DataType: "String",
-                StringValue: JSON.stringify(document)
-            },
-            "People": {
-                DataType: "String",
-                StringValue: JSON.stringify(people)
-            },
-            "Customer": {
-                DataType: "String",
-                StringValue: JSON.stringify(customer)
+                StringValue: JSON.stringify(person)
             }
         }
     };
+
+    if (status.document !== recentStatus.document) {
+        params.Subject = `${customer.companyName} has changed status`;
+        params.Message = `${customer.companyName} has moved from ${recentStatus.document} to ${status.document}`;
+    }
+
+    if (status.pipeline !== recentStatus.pipeline) {
+        params.Message += ` and they are now in the ${status.pipeline} pipeline`;
+    }
+
+    if (document.docStatus === 'rejected') {
+        params.MessageAttributes.Type.StringValue = "warning";
+        params.Message = `${customer.companyName} has a document, ${status.document} that has been rejected due to '${status.rejectReason}'`;
+    }
+
+    return params;
 }
+
+

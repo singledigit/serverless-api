@@ -112,6 +112,15 @@ function deleteQueueMessage(params) {
     })
 }
 
+function deleteQueueMessageBatch(params) {
+    return new Promise((resolve, reject) => {
+        sqs.deleteMessageBatch(params, (err, data) => {
+            if (err) reject(err);
+            else resolve(data);
+        })
+    })
+}
+
 function publishNotification(params) {
     return new Promise((resolve, reject) => {
         sns.publish(params, (err, data) => {
@@ -133,4 +142,5 @@ exports.invoke = invoke;
 exports.sendQueueMessage = sendQueueMessage;
 exports.receiveQueueMessage = receiveQueueMessage;
 exports.deleteQueueMessage = deleteQueueMessage;
+exports.deleteQueueMessageBatch = deleteQueueMessageBatch;
 exports.publishNotification = publishNotification;

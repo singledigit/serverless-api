@@ -16,62 +16,28 @@ provider:
         - "sqs:ReceiveMessage"
         - "sqs:DeleteMessage"
       Resource:
-        Fn::GetAtt: [GeneralNotification, Arn]
+        Fn::GetAtt: [SQSGeneralNotification, Arn]
     - Effect: Allow
       Action:
         - "sns:Publish"
-      Resource:
-        - "Ref" : "SNSChangeToDoc"
-        - "Ref" : "SNSChangeToPipeline"
-        - "Ref" : "SNSRejectedDoc"
+      Resource: "*"
 
 functions:
   agent:
     handler: agent.handler
   slack:
     handler: slack.handler
-  email:
-    handler: email.handler
+    events:
+      - sns: ${opt:stage, self:provider.stage}-notifier
 
 resources:
   Resources:
-    GeneralNotification:
+    SQSGeneralNotification:
       Type: "AWS::SQS::Queue"
       Properties:
         QueueName: ${opt:stage, self:provider.stage}-GeneralNotifications
-    SNSChangeToDoc:
+    SNSNotifyOfChange:
       Type: "AWS::SNS::Topic"
       Properties:
-        DisplayName: "Change To Document"
-        TopicName: ${opt:stage, self:provider.stage}-ChangeToDocument
-        Subscription:
-          -
-            Endpoint: arn:aws:lambda:us-east-1:366574430586:function:notifications-${opt:stage, self:provider.stage}-slack
-            Protocol: "lambda"
-          -
-            Endpoint: arn:aws:lambda:us-east-1:366574430586:function:notifications-${opt:stage, self:provider.stage}-email
-            Protocol: "lambda"
-    SNSChangeToPipeline:
-      Type: "AWS::SNS::Topic"
-      Properties:
-        DisplayName: "Change To Pipeline"
-        TopicName: ${opt:stage, self:provider.stage}-ChangeToPipeline
-        Subscription:
-          -
-            Endpoint: arn:aws:lambda:us-east-1:366574430586:function:notifications-${opt:stage, self:provider.stage}-slack
-            Protocol: "lambda"
-          -
-            Endpoint: arn:aws:lambda:us-east-1:366574430586:function:notifications-${opt:stage, self:provider.stage}-email
-            Protocol: "lambda"
-    SNSRejectedDoc:
-      Type: "AWS::SNS::Topic"
-      Properties:
-        DisplayName: "Rejected Document"
-        TopicName: ${opt:stage, self:provider.stage}-RejectedDocument
-        Subscription:
-          -
-            Endpoint: arn:aws:lambda:us-east-1:366574430586:function:notifications-${opt:stage, self:provider.stage}-slack
-            Protocol: "lambda"
-          -
-            Endpoint: arn:aws:lambda:us-east-1:366574430586:function:notifications-${opt:stage, self:provider.stage}-email
-            Protocol: "lambda"
+        DisplayName: "Notification of Change"
+        TopicName: ${opt:stage, self:provider.stage}-NotifyOfChange
